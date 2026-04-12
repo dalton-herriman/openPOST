@@ -1,8 +1,6 @@
 # openPOST
 
-Open source, cross-platform desktop app for API testing. No cloud, no accounts, no telemetry.
-
-No accounts. No telemetry. No subscriptions. Just a fast, local tool for testing APIs.
+Open source, cross-platform desktop app for API testing. No cloud, no accounts, no telemetry. Just a fast, local tool that does what you need.
 
 ## Features
 
@@ -22,7 +20,7 @@ No accounts. No telemetry. No subscriptions. Just a fast, local tool for testing
 
 ### Download
 
-Pre-built binaries for macOS, Windows, and Linux will be available on the [Releases](https://github.com/openPOST/openPOST/releases) page.
+Pre-built binaries for macOS, Windows, and Linux will be available on the [Releases](https://github.com/dalton-herriman/openPOST/releases) page.
 
 ### Build from Source
 
@@ -32,7 +30,7 @@ Pre-built binaries for macOS, Windows, and Linux will be available on the [Relea
 - Platform-specific dependencies — see [Tauri v2 prerequisites](https://v2.tauri.app/start/prerequisites/)
 
 ```bash
-git clone https://github.com/openPOST/openPOST.git
+git clone https://github.com/dalton-herriman/openPOST.git
 cd openPOST
 npm install
 npm run tauri build
@@ -87,4 +85,4 @@ See [SECURITY.md](SECURITY.md) for reporting vulnerabilities.
 
 ## License
 
-[AGPL-3.0](LICENSE.md)
+[AGPL-3.0](LICENSE)
