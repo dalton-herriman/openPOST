@@ -1,6 +1,6 @@
 # openPOST
 
-Open source, cross-platform desktop app for API testing. Like Postman — without the cloud.
+Open source, cross-platform desktop app for API testing. No cloud, no accounts, no telemetry.
 
 No accounts. No telemetry. No subscriptions. Just a fast, local tool for testing APIs.
 
