@@ -40,6 +40,8 @@ npm run tauri dev           # Dev mode with hot reload
 npx tauri build             # Production build
 npx tsc --noEmit            # TypeScript type check
 cargo check                 # Rust type check (run from src-tauri/)
+npm test                    # Frontend unit tests (Vitest)
+cd src-tauri && cargo test  # Backend unit tests
 ```
 
 ## Architecture Notes

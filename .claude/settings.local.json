@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(npm install:*)",
-      "Bash(git -C /Users/dalton/Projects/openPOST log --all --oneline --grep=\"secret\\\\|password\\\\|token\\\\|key\" -i)"
+      "Bash(git -C /Users/dalton/Projects/openPOST log --all --oneline --grep=\"secret\\\\|password\\\\|token\\\\|key\" -i)",
+      "Bash(npm test:*)",
+      "Bash(cargo test:*)"
     ]
   }
 }

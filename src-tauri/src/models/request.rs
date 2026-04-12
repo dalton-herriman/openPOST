@@ -15,7 +15,7 @@
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum HttpMethod {
     Get,
     Post,
@@ -26,7 +26,7 @@ pub enum HttpMethod {
     Options,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum BodyType {
     None,
     Json,
@@ -35,7 +35,7 @@ pub enum BodyType {
     FormUrlEncoded,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct KeyValuePair {
     pub key: String,
@@ -43,7 +43,7 @@ pub struct KeyValuePair {
     pub enabled: bool,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RequestData {
     pub id: String,
@@ -55,4 +55,54 @@ pub struct RequestData {
     pub body_type: BodyType,
     pub body_raw: Option<String>,
     pub body_form_data: Option<Vec<KeyValuePair>>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn make_request() -> RequestData {
+        RequestData {
+            id: "test-id".into(),
+            name: "Test".into(),
+            method: HttpMethod::Get,
+            url: "https://example.com".into(),
+            headers: vec![],
+            query_params: vec![KeyValuePair {
+                key: "page".into(),
+                value: "1".into(),
+                enabled: true,
+            }],
+            body_type: BodyType::None,
+            body_raw: None,
+            body_form_data: None,
+        }
+    }
+
+    #[test]
+    fn test_request_data_camel_case_keys() {
+        let req = make_request();
+        let json: serde_json::Value = serde_json::to_value(&req).unwrap();
+        let obj = json.as_object().unwrap();
+
+        // camelCase keys must be present
+        assert!(obj.contains_key("queryParams"));
+        assert!(obj.contains_key("bodyType"));
+        assert!(obj.contains_key("bodyRaw"));
+        assert!(obj.contains_key("bodyFormData"));
+
+        // snake_case keys must NOT be present
+        assert!(!obj.contains_key("query_params"));
+        assert!(!obj.contains_key("body_type"));
+        assert!(!obj.contains_key("body_raw"));
+        assert!(!obj.contains_key("body_form_data"));
+    }
+
+    #[test]
+    fn test_request_data_round_trip() {
+        let req = make_request();
+        let json = serde_json::to_string(&req).unwrap();
+        let deserialized: RequestData = serde_json::from_str(&json).unwrap();
+        assert_eq!(req, deserialized);
+    }
 }

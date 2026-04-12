@@ -65,6 +65,8 @@ src-tauri/              Rust backend
    ```bash
    npx tsc --noEmit              # Frontend type check
    cd src-tauri && cargo check    # Backend type check
+   npm test                       # Frontend unit tests
+   cd src-tauri && cargo test     # Backend unit tests
    npm run tauri build            # Full build
    ```
 4. Commit with a clear message describing what and why
@@ -99,4 +101,4 @@ Open an issue describing the feature, the use case, and how you envision it work
 
 ## License
 
-By contributing, you agree that your contributions will be licensed under the MIT License.
+By contributing, you agree that your contributions will be licensed under the AGPL-3.0 License.

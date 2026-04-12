@@ -115,3 +115,98 @@ fn remove_item_recursive(items: &mut Vec<CollectionItem>, id: &str) {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::models::request::{BodyType, HttpMethod, RequestData};
+
+    fn make_request(id: &str) -> RequestData {
+        RequestData {
+            id: id.to_string(),
+            name: "test".into(),
+            method: HttpMethod::Get,
+            url: "https://example.com".into(),
+            headers: vec![],
+            query_params: vec![],
+            body_type: BodyType::None,
+            body_raw: None,
+            body_form_data: None,
+        }
+    }
+
+    fn request_item(id: &str) -> CollectionItem {
+        CollectionItem::Request {
+            id: id.to_string(),
+            request: make_request(id),
+        }
+    }
+
+    fn folder_item(id: &str, name: &str, children: Vec<CollectionItem>) -> CollectionItem {
+        CollectionItem::Folder {
+            id: id.to_string(),
+            name: name.to_string(),
+            items: children,
+        }
+    }
+
+    #[test]
+    fn test_remove_top_level_request() {
+        let mut items = vec![request_item("a"), request_item("b"), request_item("c")];
+        remove_item_recursive(&mut items, "b");
+        assert_eq!(items.len(), 2);
+    }
+
+    #[test]
+    fn test_remove_top_level_folder() {
+        let mut items = vec![
+            folder_item("f1", "Folder", vec![]),
+            request_item("r1"),
+        ];
+        remove_item_recursive(&mut items, "f1");
+        assert_eq!(items.len(), 1);
+    }
+
+    #[test]
+    fn test_remove_nested_request() {
+        let mut items = vec![
+            folder_item("f1", "Folder", vec![request_item("r1"), request_item("r2")]),
+        ];
+        remove_item_recursive(&mut items, "r1");
+        assert_eq!(items.len(), 1); // folder still there
+        if let CollectionItem::Folder { items: children, .. } = &items[0] {
+            assert_eq!(children.len(), 1);
+        } else {
+            panic!("expected folder");
+        }
+    }
+
+    #[test]
+    fn test_remove_nonexistent_id() {
+        let mut items = vec![request_item("a"), request_item("b")];
+        remove_item_recursive(&mut items, "nonexistent");
+        assert_eq!(items.len(), 2);
+    }
+
+    #[test]
+    fn test_remove_deeply_nested() {
+        let mut items = vec![
+            folder_item("f1", "Outer", vec![
+                folder_item("f2", "Inner", vec![request_item("deep")]),
+            ]),
+        ];
+        remove_item_recursive(&mut items, "deep");
+        // Both folders remain
+        assert_eq!(items.len(), 1);
+        if let CollectionItem::Folder { items: outer, .. } = &items[0] {
+            assert_eq!(outer.len(), 1);
+            if let CollectionItem::Folder { items: inner, .. } = &outer[0] {
+                assert!(inner.is_empty());
+            } else {
+                panic!("expected inner folder");
+            }
+        } else {
+            panic!("expected outer folder");
+        }
+    }
+}

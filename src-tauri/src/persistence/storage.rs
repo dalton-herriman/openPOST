@@ -63,3 +63,90 @@ pub fn delete_json_file(path: &PathBuf) -> Result<(), String> {
     }
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde::{Deserialize, Serialize};
+    use tempfile::TempDir;
+
+    #[derive(Debug, PartialEq, Serialize, Deserialize)]
+    struct TestItem {
+        name: String,
+        count: u32,
+    }
+
+    #[test]
+    fn test_write_and_read_json() {
+        let dir = TempDir::new().unwrap();
+        let path = dir.path().join("item.json");
+        let item = TestItem { name: "test".into(), count: 42 };
+        write_json_file(&path, &item).unwrap();
+        let loaded: TestItem = read_json_file(&path).unwrap();
+        assert_eq!(loaded, item);
+    }
+
+    #[test]
+    fn test_read_nonexistent_file() {
+        let dir = TempDir::new().unwrap();
+        let path = dir.path().join("nope.json");
+        let result = read_json_file::<TestItem>(&path);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_write_creates_parent_dirs() {
+        let dir = TempDir::new().unwrap();
+        let path = dir.path().join("a").join("b").join("c").join("item.json");
+        let item = TestItem { name: "nested".into(), count: 1 };
+        write_json_file(&path, &item).unwrap();
+        let loaded: TestItem = read_json_file(&path).unwrap();
+        assert_eq!(loaded, item);
+    }
+
+    #[test]
+    fn test_list_json_dir_empty() {
+        let dir = TempDir::new().unwrap();
+        let items: Vec<TestItem> = list_json_dir(&dir.path().to_path_buf()).unwrap();
+        assert!(items.is_empty());
+    }
+
+    #[test]
+    fn test_list_json_dir_with_items() {
+        let dir = TempDir::new().unwrap();
+        for i in 0..3 {
+            let path = dir.path().join(format!("item{}.json", i));
+            write_json_file(&path, &TestItem { name: format!("item{}", i), count: i }).unwrap();
+        }
+        // Write a non-json file that should be skipped
+        fs::write(dir.path().join("readme.txt"), "not json").unwrap();
+
+        let items: Vec<TestItem> = list_json_dir(&dir.path().to_path_buf()).unwrap();
+        assert_eq!(items.len(), 3);
+    }
+
+    #[test]
+    fn test_list_json_dir_nonexistent() {
+        let dir = TempDir::new().unwrap();
+        let missing = dir.path().join("does_not_exist");
+        let items: Vec<TestItem> = list_json_dir(&missing).unwrap();
+        assert!(items.is_empty());
+    }
+
+    #[test]
+    fn test_delete_existing_file() {
+        let dir = TempDir::new().unwrap();
+        let path = dir.path().join("item.json");
+        write_json_file(&path, &TestItem { name: "x".into(), count: 0 }).unwrap();
+        assert!(path.exists());
+        delete_json_file(&path).unwrap();
+        assert!(!path.exists());
+    }
+
+    #[test]
+    fn test_delete_nonexistent_is_ok() {
+        let dir = TempDir::new().unwrap();
+        let path = dir.path().join("nope.json");
+        assert!(delete_json_file(&path).is_ok());
+    }
+}
