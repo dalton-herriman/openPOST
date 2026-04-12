@@ -87,4 +87,4 @@ See [SECURITY.md](SECURITY.md) for reporting vulnerabilities.
 
 ## License
 
-MIT
+[AGPL-3.0](LICENSE.md)
