@@ -13,11 +13,13 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import { useMemo } from "react";
+import { useMemo, useState, useCallback } from "react";
 import CodeMirror from "@uiw/react-codemirror";
 import { json } from "@codemirror/lang-json";
 import { html } from "@codemirror/lang-html";
 import { xml } from "@codemirror/lang-xml";
+import { Copy, Check } from "lucide-react";
+import { cn } from "../../lib/utils";
 import type { ResponseData } from "../../types";
 
 interface ResponseBodyProps {
@@ -25,7 +27,9 @@ interface ResponseBodyProps {
 }
 
 export function ResponseBody({ response }: ResponseBodyProps) {
-  const { formattedBody, extensions } = useMemo(() => {
+  const [copied, setCopied] = useState(false);
+
+  const { formattedBody, extensions, languageLabel } = useMemo(() => {
     const ct = response.contentType?.toLowerCase() ?? "";
 
     if (ct.includes("json")) {
@@ -35,33 +39,58 @@ export function ResponseBody({ response }: ResponseBodyProps) {
       } catch {
         // Body isn't valid JSON, show as-is
       }
-      return { formattedBody: formatted, extensions: [json()] };
+      return { formattedBody: formatted, extensions: [json()], languageLabel: "JSON" };
     }
 
     if (ct.includes("html")) {
-      return { formattedBody: response.body, extensions: [html()] };
+      return { formattedBody: response.body, extensions: [html()], languageLabel: "HTML" };
     }
 
     if (ct.includes("xml")) {
-      return { formattedBody: response.body, extensions: [xml()] };
+      return { formattedBody: response.body, extensions: [xml()], languageLabel: "XML" };
     }
 
-    return { formattedBody: response.body, extensions: [] };
+    return { formattedBody: response.body, extensions: [], languageLabel: "Text" };
   }, [response]);
 
+  const handleCopy = useCallback(async () => {
+    await navigator.clipboard.writeText(formattedBody);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }, [formattedBody]);
+
   return (
-    <CodeMirror
-      value={formattedBody}
-      readOnly
-      editable={false}
-      extensions={extensions}
-      theme="dark"
-      basicSetup={{
-        lineNumbers: true,
-        foldGutter: true,
-        highlightActiveLine: false,
-      }}
-      className="h-full text-sm"
-    />
+    <div className="flex flex-col h-full">
+      <div className="flex items-center justify-between px-3 py-1.5 border-b border-zinc-800">
+        <span className="text-xs text-zinc-500">{languageLabel}</span>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={handleCopy}
+            className={cn(
+              "p-1 rounded transition-colors",
+              copied
+                ? "text-green-400"
+                : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800",
+            )}
+            title="Copy response body"
+          >
+            {copied ? <Check size={14} /> : <Copy size={14} />}
+          </button>
+        </div>
+      </div>
+      <CodeMirror
+        value={formattedBody}
+        readOnly
+        editable={false}
+        extensions={extensions}
+        theme="dark"
+        basicSetup={{
+          lineNumbers: true,
+          foldGutter: true,
+          highlightActiveLine: false,
+        }}
+        className="flex-1 overflow-hidden text-sm"
+      />
+    </div>
   );
 }
