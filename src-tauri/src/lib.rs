@@ -19,9 +19,12 @@ mod persistence;
 
 use commands::{collections, environments, history, http};
 
+pub struct HistoryLock(pub std::sync::Mutex<()>);
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .manage(HistoryLock(std::sync::Mutex::new(())))
         .setup(|app| {
             if cfg!(debug_assertions) {
                 app.handle().plugin(

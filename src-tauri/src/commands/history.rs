@@ -15,7 +15,8 @@
 
 use crate::models::history::HistoryEntry;
 use crate::persistence::storage::{get_data_dir, read_json_file, write_json_file};
-use tauri::AppHandle;
+use crate::HistoryLock;
+use tauri::{AppHandle, State};
 
 const MAX_HISTORY: usize = 500;
 
@@ -42,7 +43,12 @@ pub fn list_history(app: AppHandle) -> Result<Vec<HistoryEntry>, String> {
 }
 
 #[tauri::command]
-pub fn add_history_entry(app: AppHandle, entry: HistoryEntry) -> Result<(), String> {
+pub fn add_history_entry(
+    app: AppHandle,
+    lock: State<'_, HistoryLock>,
+    entry: HistoryEntry,
+) -> Result<(), String> {
+    let _guard = lock.0.lock().map_err(|e| e.to_string())?;
     let mut history = load_history(&app)?;
     history.insert(0, entry);
     if history.len() > MAX_HISTORY {
@@ -52,13 +58,19 @@ pub fn add_history_entry(app: AppHandle, entry: HistoryEntry) -> Result<(), Stri
 }
 
 #[tauri::command]
-pub fn delete_history_entry(app: AppHandle, id: String) -> Result<(), String> {
+pub fn delete_history_entry(
+    app: AppHandle,
+    lock: State<'_, HistoryLock>,
+    id: String,
+) -> Result<(), String> {
+    let _guard = lock.0.lock().map_err(|e| e.to_string())?;
     let mut history = load_history(&app)?;
     history.retain(|e| e.id != id);
     save_history(&app, &history)
 }
 
 #[tauri::command]
-pub fn clear_history(app: AppHandle) -> Result<(), String> {
+pub fn clear_history(app: AppHandle, lock: State<'_, HistoryLock>) -> Result<(), String> {
+    let _guard = lock.0.lock().map_err(|e| e.to_string())?;
     save_history(&app, &vec![])
 }
