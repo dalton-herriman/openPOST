@@ -18,7 +18,7 @@ function makeRequest(overrides: Partial<RequestData> = {}): RequestData {
 }
 
 function makeVar(key: string, value: string, enabled = true): EnvVariable {
-  return { key, value, enabled };
+  return { id: `var-${key}`, key, value, enabled };
 }
 
 describe("substituteVariables", () => {
@@ -37,7 +37,7 @@ describe("substituteVariables", () => {
 
   it("replaces variables in header keys and values", () => {
     const req = makeRequest({
-      headers: [{ key: "{{headerName}}", value: "{{headerValue}}", enabled: true }],
+      headers: [{ id: "h1", key: "{{headerName}}", value: "{{headerValue}}", enabled: true }],
     });
     const vars = [makeVar("headerName", "Authorization"), makeVar("headerValue", "Bearer tok")];
     const result = substituteVariables(req, vars);
@@ -47,7 +47,7 @@ describe("substituteVariables", () => {
 
   it("replaces variables in query params", () => {
     const req = makeRequest({
-      queryParams: [{ key: "{{paramKey}}", value: "{{paramVal}}", enabled: true }],
+      queryParams: [{ id: "q1", key: "{{paramKey}}", value: "{{paramVal}}", enabled: true }],
     });
     const vars = [makeVar("paramKey", "search"), makeVar("paramVal", "test")];
     const result = substituteVariables(req, vars);
@@ -63,7 +63,7 @@ describe("substituteVariables", () => {
 
   it("replaces variables in bodyFormData", () => {
     const req = makeRequest({
-      bodyFormData: [{ key: "{{field}}", value: "{{val}}", enabled: true }],
+      bodyFormData: [{ id: "f1", key: "{{field}}", value: "{{val}}", enabled: true }],
     });
     const vars = [makeVar("field", "username"), makeVar("val", "admin")];
     const result = substituteVariables(req, vars);

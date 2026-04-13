@@ -14,6 +14,11 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
+
+fn generate_id() -> String {
+    Uuid::new_v4().to_string()
+}
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum HttpMethod {
@@ -38,6 +43,8 @@ pub enum BodyType {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct KeyValuePair {
+    #[serde(default = "generate_id")]
+    pub id: String,
     pub key: String,
     pub value: String,
     pub enabled: bool,
@@ -69,6 +76,7 @@ mod tests {
             url: "https://example.com".into(),
             headers: vec![],
             query_params: vec![KeyValuePair {
+                id: "kv-1".into(),
                 key: "page".into(),
                 value: "1".into(),
                 enabled: true,

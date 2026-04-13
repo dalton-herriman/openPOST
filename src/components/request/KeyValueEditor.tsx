@@ -14,6 +14,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import { Trash2, Plus } from "lucide-react";
+import { v4 as uuidv4 } from "uuid";
 import type { KeyValuePair } from "../../types";
 import { cn } from "../../lib/utils";
 
@@ -39,13 +40,13 @@ export function KeyValueEditor({
   const removePair = (index: number) => {
     const updated = pairs.filter((_, i) => i !== index);
     if (updated.length === 0) {
-      updated.push({ key: "", value: "", enabled: true });
+      updated.push({ id: uuidv4(), key: "", value: "", enabled: true });
     }
     onChange(updated);
   };
 
   const addPair = () => {
-    onChange([...pairs, { key: "", value: "", enabled: true }]);
+    onChange([...pairs, { id: uuidv4(), key: "", value: "", enabled: true }]);
   };
 
   return (
@@ -63,7 +64,7 @@ export function KeyValueEditor({
           <tbody>
             {pairs.map((pair, i) => (
               <tr
-                key={i}
+                key={pair.id}
                 className={cn(
                   "border-b border-zinc-800/50",
                   !pair.enabled && "opacity-40",

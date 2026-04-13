@@ -15,6 +15,7 @@
 
 import { useEffect, useState } from "react";
 import { Globe, Plus, Trash2, Edit2, Check, X } from "lucide-react";
+import { v4 as uuidv4 } from "uuid";
 import { useEnvironmentsStore } from "../../stores/environments-store";
 import { EmptyState } from "../shared/EmptyState";
 import type { Environment, EnvVariable } from "../../types";
@@ -30,7 +31,7 @@ function EnvEditor({
   const [variables, setVariables] = useState<EnvVariable[]>(
     env.variables.length > 0
       ? env.variables
-      : [{ key: "", value: "", enabled: true }],
+      : [{ id: uuidv4(), key: "", value: "", enabled: true }],
   );
 
   const save = async () => {
@@ -62,7 +63,7 @@ function EnvEditor({
         </div>
       </div>
       {variables.map((v, i) => (
-        <div key={i} className="flex gap-1 mb-1">
+        <div key={v.id} className="flex gap-1 mb-1">
           <input
             value={v.key}
             onChange={(e) => updateVar(i, "key", e.target.value)}
@@ -79,7 +80,7 @@ function EnvEditor({
       ))}
       <button
         onClick={() =>
-          setVariables([...variables, { key: "", value: "", enabled: true }])
+          setVariables([...variables, { id: uuidv4(), key: "", value: "", enabled: true }])
         }
         className="text-[10px] text-zinc-500 hover:text-zinc-300 mt-1"
       >

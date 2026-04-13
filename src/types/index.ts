@@ -17,6 +17,7 @@ export type HttpMethod = "Get" | "Post" | "Put" | "Patch" | "Delete" | "Head" | 
 export type BodyType = "None" | "Json" | "FormData" | "RawText" | "FormUrlEncoded";
 
 export interface KeyValuePair {
+  id: string;
   key: string;
   value: string;
   enabled: boolean;
@@ -63,6 +64,7 @@ export interface Environment {
 }
 
 export interface EnvVariable {
+  id: string;
   key: string;
   value: string;
   enabled: boolean;

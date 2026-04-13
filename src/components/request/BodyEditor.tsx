@@ -15,6 +15,7 @@
 
 import CodeMirror from "@uiw/react-codemirror";
 import { json } from "@codemirror/lang-json";
+import { v4 as uuidv4 } from "uuid";
 import { useRequestStore } from "../../stores/request-store";
 import { KeyValueEditor } from "./KeyValueEditor";
 import type { BodyType } from "../../types";
@@ -79,7 +80,7 @@ export function BodyEditor() {
           <KeyValueEditor
             pairs={
               activeRequest.bodyFormData ?? [
-                { key: "", value: "", enabled: true },
+                { id: uuidv4(), key: "", value: "", enabled: true },
               ]
             }
             onChange={setBodyFormData}
