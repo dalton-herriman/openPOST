@@ -15,11 +15,13 @@
 
 use crate::models::request::{BodyType, HttpMethod, RequestData};
 use crate::models::response::ResponseData;
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 #[tauri::command]
 pub async fn send_request(request: RequestData) -> Result<ResponseData, String> {
     let client = reqwest::Client::builder()
+        .timeout(Duration::from_secs(30))
+        .connect_timeout(Duration::from_secs(10))
         .build()
         .map_err(|e| e.to_string())?;
 
