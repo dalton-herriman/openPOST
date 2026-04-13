@@ -43,6 +43,7 @@ pub fn run() {
             collections::update_collection,
             collections::delete_collection,
             collections::create_collection_item,
+            collections::create_collection_folder,
             collections::delete_collection_item,
             history::list_history,
             history::add_history_entry,

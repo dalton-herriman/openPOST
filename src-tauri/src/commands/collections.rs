@@ -72,11 +72,29 @@ pub fn delete_collection(app: AppHandle, id: String) -> Result<(), String> {
     delete_json_file(&path)
 }
 
+fn find_folder_mut<'a>(
+    items: &'a mut Vec<CollectionItem>,
+    folder_id: &str,
+) -> Option<&'a mut Vec<CollectionItem>> {
+    for item in items.iter_mut() {
+        if let CollectionItem::Folder { id, items: children, .. } = item {
+            if id == folder_id {
+                return Some(children);
+            }
+            if let Some(found) = find_folder_mut(children, folder_id) {
+                return Some(found);
+            }
+        }
+    }
+    None
+}
+
 #[tauri::command]
 pub fn create_collection_item(
     app: AppHandle,
     collection_id: String,
     request: RequestData,
+    parent_id: Option<String>,
 ) -> Result<Collection, String> {
     let path = collections_dir(&app)?.join(format!("{}.json", collection_id));
     let mut collection: Collection = read_json_file(&path)?;
@@ -84,7 +102,41 @@ pub fn create_collection_item(
         id: Uuid::new_v4().to_string(),
         request,
     };
-    collection.items.push(item);
+    match parent_id {
+        Some(ref pid) => {
+            let folder = find_folder_mut(&mut collection.items, pid)
+                .ok_or_else(|| format!("Folder {} not found", pid))?;
+            folder.push(item);
+        }
+        None => collection.items.push(item),
+    }
+    collection.updated_at = Utc::now().to_rfc3339();
+    write_json_file(&path, &collection)?;
+    Ok(collection)
+}
+
+#[tauri::command]
+pub fn create_collection_folder(
+    app: AppHandle,
+    collection_id: String,
+    name: String,
+    parent_id: Option<String>,
+) -> Result<Collection, String> {
+    let path = collections_dir(&app)?.join(format!("{}.json", collection_id));
+    let mut collection: Collection = read_json_file(&path)?;
+    let folder = CollectionItem::Folder {
+        id: Uuid::new_v4().to_string(),
+        name,
+        items: vec![],
+    };
+    match parent_id {
+        Some(ref pid) => {
+            let parent = find_folder_mut(&mut collection.items, pid)
+                .ok_or_else(|| format!("Folder {} not found", pid))?;
+            parent.push(folder);
+        }
+        None => collection.items.push(folder),
+    }
     collection.updated_at = Utc::now().to_rfc3339();
     write_json_file(&path, &collection)?;
     Ok(collection)

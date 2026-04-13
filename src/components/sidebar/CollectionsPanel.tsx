@@ -14,7 +14,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import { useEffect, useState } from "react";
-import { FolderOpen, Plus, Trash2 } from "lucide-react";
+import { ChevronRight, FolderOpen, FolderPlus, Plus, Trash2 } from "lucide-react";
 import { useCollectionsStore } from "../../stores/collections-store";
 import { useRequestStore } from "../../stores/request-store";
 import { EmptyState } from "../shared/EmptyState";
@@ -61,11 +61,140 @@ function RequestItem({
   );
 }
 
+function FolderItem({
+  item,
+  collectionId,
+  onLoad,
+}: {
+  item: Extract<CollectionItem, { type: "folder" }>;
+  collectionId: string;
+  onLoad: (request: RequestData) => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const [showNewFolder, setShowNewFolder] = useState(false);
+  const [newFolderName, setNewFolderName] = useState("");
+  const removeItem = useCollectionsStore((s) => s.removeItem);
+  const addFolder = useCollectionsStore((s) => s.addFolder);
+
+  const handleCreateFolder = async () => {
+    if (!newFolderName.trim()) return;
+    await addFolder(collectionId, newFolderName.trim(), item.id);
+    setNewFolderName("");
+    setShowNewFolder(false);
+  };
+
+  return (
+    <div>
+      <div className="flex items-center gap-1 group px-2 py-1 hover:bg-zinc-800/50 rounded cursor-pointer">
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="text-zinc-500 shrink-0"
+        >
+          <ChevronRight
+            size={12}
+            className={cn("transition-transform", expanded && "rotate-90")}
+          />
+        </button>
+        <FolderOpen size={12} className="text-zinc-500 shrink-0" />
+        <span
+          className="text-xs text-zinc-300 truncate flex-1"
+          onClick={() => setExpanded(!expanded)}
+        >
+          {item.name}
+        </span>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowNewFolder(true);
+            setExpanded(true);
+          }}
+          className="opacity-0 group-hover:opacity-100 text-zinc-600 hover:text-zinc-300 transition-all"
+          title="New subfolder"
+        >
+          <FolderPlus size={10} />
+        </button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            removeItem(collectionId, item.id);
+          }}
+          className="opacity-0 group-hover:opacity-100 text-zinc-600 hover:text-red-400 transition-all"
+        >
+          <Trash2 size={10} />
+        </button>
+      </div>
+      {expanded && (
+        <div className="ml-3">
+          {showNewFolder && (
+            <div className="px-2 py-1">
+              <input
+                autoFocus
+                value={newFolderName}
+                onChange={(e) => setNewFolderName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleCreateFolder();
+                  if (e.key === "Escape") setShowNewFolder(false);
+                }}
+                onBlur={() => setShowNewFolder(false)}
+                placeholder="Folder name..."
+                className="w-full bg-zinc-800 border border-zinc-700 rounded px-2 py-0.5 text-xs text-zinc-200 outline-none focus:border-blue-500/50"
+              />
+            </div>
+          )}
+          {item.items.length === 0 && !showNewFolder && (
+            <span className="text-[10px] text-zinc-600 px-2">Empty</span>
+          )}
+          <CollectionItems
+            items={item.items}
+            collectionId={collectionId}
+            onLoad={onLoad}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CollectionItems({
+  items,
+  collectionId,
+  onLoad,
+}: {
+  items: CollectionItem[];
+  collectionId: string;
+  onLoad: (request: RequestData) => void;
+}) {
+  return (
+    <>
+      {items.map((item) =>
+        item.type === "request" ? (
+          <RequestItem
+            key={item.id}
+            item={item}
+            collectionId={collectionId}
+            onLoad={onLoad}
+          />
+        ) : (
+          <FolderItem
+            key={item.id}
+            item={item}
+            collectionId={collectionId}
+            onLoad={onLoad}
+          />
+        ),
+      )}
+    </>
+  );
+}
+
 export function CollectionsPanel() {
-  const { collections, fetch, create, remove } = useCollectionsStore();
+  const { collections, fetch, create, remove, addFolder } =
+    useCollectionsStore();
   const loadRequest = useRequestStore((s) => s.loadRequest);
   const [showNew, setShowNew] = useState(false);
   const [newName, setNewName] = useState("");
+  const [newFolderFor, setNewFolderFor] = useState<string | null>(null);
+  const [newFolderName, setNewFolderName] = useState("");
 
   useEffect(() => {
     fetch();
@@ -76,6 +205,13 @@ export function CollectionsPanel() {
     await create(newName.trim());
     setNewName("");
     setShowNew(false);
+  };
+
+  const handleCreateFolder = async (collectionId: string) => {
+    if (!newFolderName.trim()) return;
+    await addFolder(collectionId, newFolderName.trim());
+    setNewFolderName("");
+    setNewFolderFor(null);
   };
 
   if (collections.length === 0 && !showNew) {
@@ -133,6 +269,16 @@ export function CollectionsPanel() {
                 {col.name}
               </span>
               <button
+                onClick={() => {
+                  setNewFolderFor(col.id);
+                  setNewFolderName("");
+                }}
+                className="opacity-0 group-hover:opacity-100 text-zinc-600 hover:text-zinc-300 transition-all"
+                title="New folder"
+              >
+                <FolderPlus size={10} />
+              </button>
+              <button
                 onClick={() => remove(col.id)}
                 className="opacity-0 group-hover:opacity-100 text-zinc-600 hover:text-red-400 transition-all"
               >
@@ -140,21 +286,32 @@ export function CollectionsPanel() {
               </button>
             </div>
             <div className="ml-3">
-              {col.items.length === 0 && (
+              {newFolderFor === col.id && (
+                <div className="px-2 py-1">
+                  <input
+                    autoFocus
+                    value={newFolderName}
+                    onChange={(e) => setNewFolderName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleCreateFolder(col.id);
+                      if (e.key === "Escape") setNewFolderFor(null);
+                    }}
+                    onBlur={() => setNewFolderFor(null)}
+                    placeholder="Folder name..."
+                    className="w-full bg-zinc-800 border border-zinc-700 rounded px-2 py-0.5 text-xs text-zinc-200 outline-none focus:border-blue-500/50"
+                  />
+                </div>
+              )}
+              {col.items.length === 0 && newFolderFor !== col.id && (
                 <span className="text-[10px] text-zinc-600 px-2">
                   No requests
                 </span>
               )}
-              {col.items.map((item) =>
-                item.type === "request" ? (
-                  <RequestItem
-                    key={item.id}
-                    item={item}
-                    collectionId={col.id}
-                    onLoad={loadRequest}
-                  />
-                ) : null,
-              )}
+              <CollectionItems
+                items={col.items}
+                collectionId={col.id}
+                onLoad={loadRequest}
+              />
             </div>
           </div>
         ))}

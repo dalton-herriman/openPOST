@@ -24,7 +24,8 @@ interface CollectionsStore {
   create: (name: string) => Promise<Collection>;
   update: (collection: Collection) => Promise<void>;
   remove: (id: string) => Promise<void>;
-  addItem: (collectionId: string, request: RequestData) => Promise<void>;
+  addItem: (collectionId: string, request: RequestData, parentId?: string) => Promise<void>;
+  addFolder: (collectionId: string, name: string, parentId?: string) => Promise<void>;
   removeItem: (collectionId: string, itemId: string) => Promise<void>;
 }
 
@@ -58,8 +59,13 @@ export const useCollectionsStore = create<CollectionsStore>((set, get) => ({
     await get().fetch();
   },
 
-  addItem: async (collectionId, request) => {
-    await api.createCollectionItem(collectionId, request);
+  addItem: async (collectionId, request, parentId?) => {
+    await api.createCollectionItem(collectionId, request, parentId);
+    await get().fetch();
+  },
+
+  addFolder: async (collectionId, name, parentId?) => {
+    await api.createCollectionFolder(collectionId, name, parentId);
     await get().fetch();
   },
 

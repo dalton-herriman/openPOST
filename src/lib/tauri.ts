@@ -34,8 +34,10 @@ export const api = {
     invoke<Collection>("update_collection", { collection }),
   deleteCollection: (id: string) =>
     invoke<void>("delete_collection", { id }),
-  createCollectionItem: (collectionId: string, request: RequestData) =>
-    invoke<Collection>("create_collection_item", { collectionId, request }),
+  createCollectionItem: (collectionId: string, request: RequestData, parentId?: string) =>
+    invoke<Collection>("create_collection_item", { collectionId, request, parentId: parentId ?? null }),
+  createCollectionFolder: (collectionId: string, name: string, parentId?: string) =>
+    invoke<Collection>("create_collection_folder", { collectionId, name, parentId: parentId ?? null }),
   deleteCollectionItem: (collectionId: string, itemId: string) =>
     invoke<Collection>("delete_collection_item", { collectionId, itemId }),
 
