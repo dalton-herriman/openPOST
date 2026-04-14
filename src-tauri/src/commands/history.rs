@@ -50,7 +50,7 @@ pub fn add_history_entry(
 ) -> Result<(), String> {
     let _guard = lock.0.lock().map_err(|e| e.to_string())?;
     let mut history = load_history(&app)?;
-    history.insert(0, entry);
+    history.insert(0, entry.redacted());
     if history.len() > MAX_HISTORY {
         history.truncate(MAX_HISTORY);
     }
