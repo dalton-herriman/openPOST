@@ -73,7 +73,7 @@ pub fn delete_collection(app: AppHandle, id: String) -> Result<(), String> {
 }
 
 fn find_folder_mut<'a>(
-    items: &'a mut Vec<CollectionItem>,
+    items: &'a mut [CollectionItem],
     folder_id: &str,
 ) -> Option<&'a mut Vec<CollectionItem>> {
     for item in items.iter_mut() {
