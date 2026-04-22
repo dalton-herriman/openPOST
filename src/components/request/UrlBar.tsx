@@ -52,7 +52,7 @@ export function UrlBar() {
       setResponse(response);
       await addHistory({
         id: uuidv4(),
-        request: activeRequest,
+        request: resolvedRequest,
         response,
         timestamp: new Date().toISOString(),
       });
