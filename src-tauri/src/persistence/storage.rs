@@ -49,8 +49,15 @@ pub fn list_json_dir<T: DeserializeOwned>(dir: &PathBuf) -> Result<Vec<T>, Strin
         let entry = entry.map_err(|e| e.to_string())?;
         let path = entry.path();
         if path.extension().and_then(|s| s.to_str()) == Some("json") {
-            if let Ok(item) = read_json_file::<T>(&path) {
-                items.push(item);
+            match read_json_file::<T>(&path) {
+                Ok(item) => items.push(item),
+                Err(err) => {
+                    log::warn!(
+                        "Skipping unreadable JSON file at {}: {}",
+                        path.display(),
+                        err
+                    );
+                }
             }
         }
     }
@@ -123,6 +130,24 @@ mod tests {
 
         let items: Vec<TestItem> = list_json_dir(&dir.path().to_path_buf()).unwrap();
         assert_eq!(items.len(), 3);
+    }
+
+    #[test]
+    fn test_list_json_dir_skips_invalid_json_files() {
+        let dir = TempDir::new().unwrap();
+        write_json_file(
+            &dir.path().join("valid.json"),
+            &TestItem {
+                name: "valid".into(),
+                count: 1,
+            },
+        )
+        .unwrap();
+        fs::write(dir.path().join("invalid.json"), "{not valid json").unwrap();
+
+        let items: Vec<TestItem> = list_json_dir(&dir.path().to_path_buf()).unwrap();
+        assert_eq!(items.len(), 1);
+        assert_eq!(items[0].name, "valid");
     }
 
     #[test]
